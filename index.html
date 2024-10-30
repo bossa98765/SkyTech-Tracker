@@ -194,6 +194,7 @@
 
         function clearFarmInputs() {
             document.getElementById('farmName').value = '';
+            document.getElementById('farmStatus').value = 'Running'; // Reset to default
             document.getElementById('farmInstructions').value = '';
             document.getElementById('farmBotName').value = '';
             document.getElementById('farmStorageBotName').value = '';
@@ -251,11 +252,11 @@
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${FARM_LIST}?key=${API_KEY}`)
                 .then(response => response.json())
                 .then(data => {
-                    const rows = data.values;
+                    const rows = data.values.slice(1); // Skip header row
                     const farmIndex = rows.findIndex(row => row[0] === farmName);
                     if (farmIndex > -1) {
                         const request = {
-                            range: `${FARM_LIST}!A${farmIndex + 1}`,
+                            range: `${FARM_LIST}!A${farmIndex + 2}`, // Adjust for 0-based index and header
                             majorDimension: 'ROWS',
                             values: [['']]
                         };
@@ -272,11 +273,11 @@
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${STORAGE_BOT_LIST}?key=${API_KEY}`)
                 .then(response => response.json())
                 .then(data => {
-                    const rows = data.values;
+                    const rows = data.values.slice(1); // Skip header row
                     const botIndex = rows.findIndex(row => row[0] === botName);
                     if (botIndex > -1) {
                         const request = {
-                            range: `${STORAGE_BOT_LIST}!A${botIndex + 1}`,
+                            range: `${STORAGE_BOT_LIST}!A${botIndex + 2}`, // Adjust for 0-based index and header
                             majorDimension: 'ROWS',
                             values: [['']]
                         };
@@ -293,11 +294,11 @@
             fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${TRACKING_BOT_LIST}?key=${API_KEY}`)
                 .then(response => response.json())
                 .then(data => {
-                    const rows = data.values;
+                    const rows = data.values.slice(1); // Skip header row
                     const botIndex = rows.findIndex(row => row[0] === botName);
                     if (botIndex > -1) {
                         const request = {
-                            range: `${TRACKING_BOT_LIST}!A${botIndex + 1}`,
+                            range: `${TRACKING_BOT_LIST}!A${botIndex + 2}`, // Adjust for 0-based index and header
                             majorDimension: 'ROWS',
                             values: [['']]
                         };
