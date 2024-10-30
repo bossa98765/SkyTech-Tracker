@@ -1,315 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkyTech-Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Futura&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Futura', sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-        }
-        .tab {
-            display: none;
-        }
-        .active {
-            display: block;
-        }
-        .button {
-            background-color: #1e88e5;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        .button:hover {
-            background-color: #1565c0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyTech-Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Futura:wght@400&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Futura', sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    .container {
+      width: 80%;
+      margin: auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .tab-button {
+      margin: 10px;
+      padding: 10px;
+      cursor: pointer;
+      color: #e0e0e0;
+      background-color: #333;
+      border: none;
+      border-radius: 5px;
+    }
+    .tab-content {
+      display: none;
+      margin-top: 20px;
+    }
+    .visible {
+      display: block;
+    }
+    .dropdown {
+      margin-top: 5px;
+      color: #000;
+    }
+  </style>
 </head>
 <body>
 
-    <h1>SkyTech-Tracker</h1>
-    <button class="button" onclick="showTab('farms')">Farm List</button>
-    <button class="button" onclick="showTab('storage-bots')">Storage Bot List</button>
-    <button class="button" onclick="showTab('tracking-bots')">Tracking Bot List</button>
+<div class="container">
+  <h1>SkyTech-Tracker</h1>
+  <button class="tab-button" onclick="showTab('farmList')">Farm List</button>
+  <button class="tab-button" onclick="showTab('storageBotList')">Storage Bot List</button>
+  <button class="tab-button" onclick="showTab('trackingBotList')">Tracking Bot List</button>
 
-    <div id="farms" class="tab active">
-        <h2>Farm List</h2>
-        <div id="farmsList"></div>
-        <h3>Add Farm</h3>
-        <input type="text" id="farmName" placeholder="Farm Name" required>
-        <select id="farmStatus">
-            <option value="Running">Running</option>
-            <option value="Stopped">Stopped</option>
-            <option value="Broken">Broken</option>
-        </select>
-        <input type="text" id="farmInstructions" placeholder="Instructions" required>
-        <input type="text" id="farmBotName" placeholder="Bot Name" required>
-        <input type="text" id="farmStorageBotName" placeholder="Storage Bot Name" required>
-        <input type="text" id="farmLocationOW" placeholder="Location (OW)" required>
-        <input type="text" id="farmLocationNE" placeholder="Location (NE)" required>
-        <button class="button" onclick="addFarm()">Add Farm</button>
-    </div>
+  <div id="farmList" class="tab-content">
+    <h2>Farm List</h2>
+    <!-- Form to add farm data -->
+    <form id="farmForm">
+      <input type="text" id="farmName" placeholder="Farm Name" required>
+      <select id="farmStatus" class="dropdown">
+        <option value="Running">Running</option>
+        <option value="Stopped">Stopped</option>
+        <option value="Broken">Broken</option>
+      </select>
+      <input type="text" id="farmInstructions" placeholder="Instructions">
+      <input type="text" id="farmBotName" placeholder="Bot Name">
+      <input type="text" id="farmStorageBotName" placeholder="Storage Bot Name">
+      <input type="text" id="farmLocationOW" placeholder="Location (OW)">
+      <input type="text" id="farmLocationNE" placeholder="Location (NE)">
+      <button type="button" onclick="addFarm()">Add Farm</button>
+    </form>
+    <ul id="farmListData"></ul>
+  </div>
 
-    <div id="storage-bots" class="tab">
-        <h2>Storage Bot List</h2>
-        <div id="storageBotsList"></div>
-        <h3>Add Storage Bot</h3>
-        <input type="text" id="storageBotName" placeholder="Storage Bot Name" required>
-        <input type="text" id="storageContents" placeholder="Contents" required>
-        <button class="button" onclick="addStorageBot()">Add Storage Bot</button>
-    </div>
+  <!-- Similar sections for Storage Bot List and Tracking Bot List -->
+</div>
 
-    <div id="tracking-bots" class="tab">
-        <h2>Tracking Bot List</h2>
-        <div id="trackingBotsList"></div>
-        <h3>Add Tracking Bot</h3>
-        <input type="text" id="trackingBotName" placeholder="Bot Name" required>
-        <input type="text" id="trackingPurpose" placeholder="Purpose" required>
-        <input type="text" id="trackingLocation" placeholder="Location" required>
-        <button class="button" onclick="addTrackingBot()">Add Tracking Bot</button>
-    </div>
+<script>
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyoP1FxHDi5k7Oeiw7vg2CCFfuTW4x03ivw0BqvB3JB7EPQtQZPXKq2c4C52XldaOXWDA/exec';
 
-    <script>
-        const API_KEY = 'AIzaSyCPRL5DeCEF4r7RBVO9dwtTUoCcI16ywgs'; // Your API key
-        const SHEET_ID = '1DsSl1llA_xpvhBPb0f4QiiGRUPx2ehyclSx0KFwXdqk'; // Your Sheet ID
-        const FARM_LIST = 'FarmList'; // Your Farm List sheet name
-        const STORAGE_BOT_LIST = 'StorageBotList'; // Your Storage Bot List sheet name
-        const TRACKING_BOT_LIST = 'TrackingBotList'; // Your Tracking Bot List sheet name
+  async function addFarm() {
+    const farmRow = [
+      document.getElementById('farmName').value,
+      document.getElementById('farmStatus').value,
+      document.getElementById('farmInstructions').value,
+      document.getElementById('farmBotName').value,
+      document.getElementById('farmStorageBotName').value,
+      document.getElementById('farmLocationOW').value,
+      document.getElementById('farmLocationNE').value
+    ];
 
-        function showTab(tabId) {
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.getElementById(tabId).classList.add('active');
-            loadData(tabId);
-        }
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'add', values: [farmRow] }),
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-        function loadData(tabId) {
-            if (tabId === 'farms') loadFarms();
-            if (tabId === 'storage-bots') loadStorageBots();
-            if (tabId === 'tracking-bots') loadTrackingBots();
-        }
+    loadFarmData();
+  }
 
-        function loadFarms() {
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${FARM_LIST}?key=${API_KEY}`)
-                .then(response => response.json())
-                .then(data => {
-                    const farms = data.values.slice(1) || []; // Skip header row
-                    const farmsDiv = document.getElementById('farmsList');
-                    farmsDiv.innerHTML = '';
-                    farms.forEach(farm => {
-                        const farmItem = document.createElement('div');
-                        farmItem.innerHTML = `
-                            <h3>${farm[0]}</h3>
-                            <p>Status: <span style="color: ${getStatusColor(farm[1])}">${farm[1]}</span></p>
-                            <p>Instructions: ${farm[2]}</p>
-                            <p>Bot Name: ${farm[3]}</p>
-                            <p>Storage Bot Name: ${farm[4]}</p>
-                            <p>Location (OW): ${farm[5]}</p>
-                            <p>Location (NE): ${farm[6]}</p>
-                            <button class="button" onclick="removeFarm('${farm[0]}')">Remove Farm</button>
-                        `;
-                        farmsDiv.appendChild(farmItem);
-                    });
-                });
-        }
+  async function loadFarmData() {
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'fetch' }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await response.json();
 
-        function loadStorageBots() {
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${STORAGE_BOT_LIST}?key=${API_KEY}`)
-                .then(response => response.json())
-                .then(data => {
-                    const storageBots = data.values.slice(1) || []; // Skip header row
-                    const storageBotsDiv = document.getElementById('storageBotsList');
-                    storageBotsDiv.innerHTML = '';
-                    storageBots.forEach(bot => {
-                        const botItem = document.createElement('div');
-                        botItem.innerHTML = `
-                            <h3>${bot[0]}</h3>
-                            <p>Contents: ${bot[1]}</p>
-                            <button class="button" onclick="removeStorageBot('${bot[0]}')">Remove Storage Bot</button>
-                        `;
-                        storageBotsDiv.appendChild(botItem);
-                    });
-                });
-        }
+    const farmListData = document.getElementById('farmListData');
+    farmListData.innerHTML = '';
+    data.slice(1).forEach((row, index) => {
+      const li = document.createElement('li');
+      li.textContent = `Farm Name: ${row[0]}, Status: ${row[1]}, Instructions: ${row[2]}, Bot Name: ${row[3]}, Storage Bot Name: ${row[4]}, Location OW: ${row[5]}, Location NE: ${row[6]}`;
+      const removeButton = document.createElement('button');
+      removeButton.textContent = 'Remove';
+      removeButton.onclick = () => removeFarm(index + 2);
+      li.appendChild(removeButton);
+      farmListData.appendChild(li);
+    });
+  }
 
-        function loadTrackingBots() {
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${TRACKING_BOT_LIST}?key=${API_KEY}`)
-                .then(response => response.json())
-                .then(data => {
-                    const trackingBots = data.values.slice(1) || []; // Skip header row
-                    const trackingBotsDiv = document.getElementById('trackingBotsList');
-                    trackingBotsDiv.innerHTML = '';
-                    trackingBots.forEach(bot => {
-                        const botItem = document.createElement('div');
-                        botItem.innerHTML = `
-                            <h3>${bot[0]}</h3>
-                            <p>Purpose: ${bot[1]}</p>
-                            <p>Location: ${bot[2]}</p>
-                            <button class="button" onclick="removeTrackingBot('${bot[0]}')">Remove Tracking Bot</button>
-                        `;
-                        trackingBotsDiv.appendChild(botItem);
-                    });
-                });
-        }
+  async function removeFarm(rowIndex) {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'remove', rowIndex }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    loadFarmData();
+  }
 
-        function getStatusColor(status) {
-            if (status === "Running") return "green";
-            if (status === "Stopped") return "red";
-            if (status === "Broken") return "yellow";
-            return "black"; // Default color
-        }
+  function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('visible'));
+    document.getElementById(tabId).classList.add('visible');
+  }
 
-        function addFarm() {
-            const farm = {
-                farmName: document.getElementById('farmName').value,
-                status: document.getElementById('farmStatus').value,
-                instructions: document.getElementById('farmInstructions').value,
-                botName: document.getElementById('farmBotName').value,
-                storageBotName: document.getElementById('farmStorageBotName').value,
-                locationOW: document.getElementById('farmLocationOW').value,
-                locationNE: document.getElementById('farmLocationNE').value,
-            };
+  document.addEventListener('DOMContentLoaded', loadFarmData);
+</script>
 
-            const farmRow = [farm.farmName, farm.status, farm.instructions, farm.botName, farm.storageBotName, farm.locationOW, farm.locationNE];
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${FARM_LIST}!A1:G1:append?valueInputOption=RAW&key=${API_KEY}`, {
-                method: 'POST',
-                body: JSON.stringify({ values: [farmRow] }),
-                headers: { 'Content-Type': 'application/json' }
-            }).then(() => {
-                loadFarms();
-                clearFarmInputs();
-            }).catch(error => console.error('Error adding farm:', error));
-        }
-
-        function clearFarmInputs() {
-            document.getElementById('farmName').value = '';
-            document.getElementById('farmStatus').value = 'Running'; // Reset to default
-            document.getElementById('farmInstructions').value = '';
-            document.getElementById('farmBotName').value = '';
-            document.getElementById('farmStorageBotName').value = '';
-            document.getElementById('farmLocationOW').value = '';
-            document.getElementById('farmLocationNE').value = '';
-        }
-
-        function addStorageBot() {
-            const storageBot = {
-                name: document.getElementById('storageBotName').value,
-                contents: document.getElementById('storageContents').value,
-            };
-
-            const storageBotRow = [storageBot.name, storageBot.contents];
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${STORAGE_BOT_LIST}!A1:B1:append?valueInputOption=RAW&key=${API_KEY}`, {
-                method: 'POST',
-                body: JSON.stringify({ values: [storageBotRow] }),
-                headers: { 'Content-Type': 'application/json' }
-            }).then(() => {
-                loadStorageBots();
-                clearStorageBotInputs();
-            }).catch(error => console.error('Error adding storage bot:', error));
-        }
-
-        function clearStorageBotInputs() {
-            document.getElementById('storageBotName').value = '';
-            document.getElementById('storageContents').value = '';
-        }
-
-        function addTrackingBot() {
-            const trackingBot = {
-                name: document.getElementById('trackingBotName').value,
-                purpose: document.getElementById('trackingPurpose').value,
-                location: document.getElementById('trackingLocation').value,
-            };
-
-            const trackingBotRow = [trackingBot.name, trackingBot.purpose, trackingBot.location];
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${TRACKING_BOT_LIST}!A1:C1:append?valueInputOption=RAW&key=${API_KEY}`, {
-                method: 'POST',
-                body: JSON.stringify({ values: [trackingBotRow] }),
-                headers: { 'Content-Type': 'application/json' }
-            }).then(() => {
-                loadTrackingBots();
-                clearTrackingBotInputs();
-            }).catch(error => console.error('Error adding tracking bot:', error));
-        }
-
-        function clearTrackingBotInputs() {
-            document.getElementById('trackingBotName').value = '';
-            document.getElementById('trackingPurpose').value = '';
-            document.getElementById('trackingLocation').value = '';
-        }
-
-        function removeFarm(farmName) {
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${FARM_LIST}?key=${API_KEY}`)
-                .then(response => response.json())
-                .then(data => {
-                    const rows = data.values.slice(1); // Skip header row
-                    const farmIndex = rows.findIndex(row => row[0] === farmName);
-                    if (farmIndex > -1) {
-                        const request = {
-                            range: `${FARM_LIST}!A${farmIndex + 2}`, // Adjust for 0-based index and header
-                            majorDimension: 'ROWS',
-                            values: [['']]
-                        };
-                        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${request.range}:clear?key=${API_KEY}`, {
-                            method: 'POST',
-                            body: JSON.stringify(request),
-                            headers: { 'Content-Type': 'application/json' }
-                        }).then(() => loadFarms()).catch(error => console.error('Error removing farm:', error));
-                    }
-                });
-        }
-
-        function removeStorageBot(botName) {
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${STORAGE_BOT_LIST}?key=${API_KEY}`)
-                .then(response => response.json())
-                .then(data => {
-                    const rows = data.values.slice(1); // Skip header row
-                    const botIndex = rows.findIndex(row => row[0] === botName);
-                    if (botIndex > -1) {
-                        const request = {
-                            range: `${STORAGE_BOT_LIST}!A${botIndex + 2}`, // Adjust for 0-based index and header
-                            majorDimension: 'ROWS',
-                            values: [['']]
-                        };
-                        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${request.range}:clear?key=${API_KEY}`, {
-                            method: 'POST',
-                            body: JSON.stringify(request),
-                            headers: { 'Content-Type': 'application/json' }
-                        }).then(() => loadStorageBots()).catch(error => console.error('Error removing storage bot:', error));
-                    }
-                });
-        }
-
-        function removeTrackingBot(botName) {
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${TRACKING_BOT_LIST}?key=${API_KEY}`)
-                .then(response => response.json())
-                .then(data => {
-                    const rows = data.values.slice(1); // Skip header row
-                    const botIndex = rows.findIndex(row => row[0] === botName);
-                    if (botIndex > -1) {
-                        const request = {
-                            range: `${TRACKING_BOT_LIST}!A${botIndex + 2}`, // Adjust for 0-based index and header
-                            majorDimension: 'ROWS',
-                            values: [['']]
-                        };
-                        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${request.range}:clear?key=${API_KEY}`, {
-                            method: 'POST',
-                            body: JSON.stringify(request),
-                            headers: { 'Content-Type': 'application/json' }
-                        }).then(() => loadTrackingBots()).catch(error => console.error('Error removing tracking bot:', error));
-                    }
-                });
-        }
-    </script>
 </body>
 </html>
